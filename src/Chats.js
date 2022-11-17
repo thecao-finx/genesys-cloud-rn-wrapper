@@ -1,23 +1,9 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {GiftedChat} from 'react-native-gifted-chat';
-import initialMessages from './messages';
-import {
-  renderInputToolbar,
-  renderActions,
-  renderComposer,
-  renderSend,
-} from './InputToolbar';
-import {
-  renderAvatar,
-  renderBubble,
-  renderSystemMessage,
-  renderMessage,
-  renderMessageText,
-  renderCustomView,
-} from './MessageContainer';
-
-import {Text, View, NativeModule} from 'react-native';
+import {Text, View, NativeModule, Button} from 'react-native';
 import {NativeModules, NativeEventEmitter} from 'react-native';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {decode as atob, encode as btoa} from 'base-64';
 
 const {GenesysMessenger} = NativeModules;
 const MessageEvents = new NativeEventEmitter(NativeModules.GenesysMessenger);
@@ -87,8 +73,27 @@ const Chats = () => {
     // );
   };
 
+  function _base64ToArrayBuffer(base64) {
+    var binary_string = atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  const sendImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      includeBase64: true,
+    });
+    GenesysMessenger.uploadAttachment(result.assets[0].base64);
+  };
+
   return (
     <View style={{flex: 1}}>
+      <Button title="Send image" onPress={sendImage} />
       <GiftedChat
         messages={messages}
         onSend={messages => onSend(messages)}
